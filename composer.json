@@ -1,0 +1,41 @@
+{
+    "name": "baidou5/laravel-rest-api",
+    "description": "Vivala REST API utilities for Laravel applications.",
+    "type": "library",
+    "require": {
+        "laravel/framework": "5.6.*|5.7.*|5.8.*|6.*|7.*|8.*|9.*|10.*|^11.0|^12.0|^13.0"
+    },
+    "license": "MIT",
+    "keywords": [
+        "laravel",
+        "api",
+        "rest",
+        "vivala"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Vivala\\RestAPI\\": "src",
+            "Vivala\\RestAPI\\Tests\\": "tests"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Vivala\\RestAPI\\Providers\\ApiServiceProvider"
+            ],
+            "aliases": {
+                "ApiRoute": "Vivala\\RestAPI\\Facades\\ApiRoute"
+            }
+        }
+    },
+    "authors": [
+        {
+            "name": "Vivala",
+            "email": "dev@vivala.uk"
+        }
+    ],
+    "support": {
+        "source": "https://github.com/baidou5/laravel-rest-api",
+        "issues": "https://github.com/baidou5/laravel-rest-api/issues"
+    }
+}

@@ -1,0 +1,102 @@
+<?php
+
+namespace Vivala\RestAPI\Routing;
+
+use Closure;
+use Vivala\RestAPI\Middleware\ApiMiddleware;
+use Illuminate\Routing\Router;
+
+class ApiRouter extends Router
+{
+
+    protected $versions = [];
+
+    /**
+     * Route a resource to a controller.
+     *
+     * @param  string  $name
+     * @param  string  $controller
+     * @param  array  $options
+     * @return \Illuminate\Routing\RouteCollection|void
+     */
+    public function resource($name, $controller, array $options = [])
+    {
+        $registrar = ($this->container && $this->container->bound(ApiResourceRegistrar::class))
+            ? $this->container->make(ApiResourceRegistrar::class)
+            : new ApiResourceRegistrar($this);
+
+        return $registrar->register($name, $controller, $options);
+    }
+
+    public function version($versions, Closure $callback)
+    {
+        if (is_string($versions))
+        {
+            $versions = [$versions];
+        }
+
+        $this->versions = $versions;
+
+        call_user_func($callback, $this);
+    }
+
+    /**
+     * Add a route to the underlying route collection.
+     *
+     * @param  array|string  $methods
+     * @param  string  $uri
+     * @param  \Closure|array|string|null  $action
+     * @return \Illuminate\Routing\Route|null
+     */
+    public function addRoute($methods, $uri, $action)
+    {
+        // We do not keep routes in ApiRouter. Whenever a route is added,
+        // we add it to Laravel's primary route collection
+        $routes = app("router")->getRoutes();
+        $prefix = config("api.prefix");
+
+        if (empty($this->versions)) {
+            if (($default = config("api.default_version")) !== null) {
+                $versions = [$default];
+            }
+            else {
+                $versions = [null];
+            }
+
+        }
+        else {
+            $versions = $this->versions;
+        }
+
+
+        // Add version prefix
+        $registeredRoute = null;
+
+        foreach ($versions as $version) {
+            // Add ApiMiddleware to all routes
+            $route = $this->createRoute($methods, $uri, $action);
+            $route->middleware(ApiMiddleware::class);
+
+            if ($version !== null) {
+                $route->prefix($version);
+                $route->name("." . $version);
+            }
+
+            if (!empty($prefix)) {
+                $route->prefix($prefix);
+            }
+
+            $routes->add($route);
+            $registeredRoute = $route;
+        }
+
+        app("router")->setRoutes($routes);
+
+        return $registeredRoute;
+    }
+
+    public function returnRoute()
+    {
+        return [];
+    }
+}
